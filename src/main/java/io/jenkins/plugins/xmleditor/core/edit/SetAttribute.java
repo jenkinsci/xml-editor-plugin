@@ -51,7 +51,7 @@ public final class SetAttribute extends XmlOperation {
         List<LAttribute> attributes = e.attributes();
         LAttribute last = attributes.isEmpty() ? null : attributes.get(attributes.size() - 1);
         String leading = last != null && last.leadingWhitespace().contains("\n") ? last.leadingWhitespace() : " ";
-        char quote = last != null ? last.quote() : context.dominantQuote();
+        char quote = last != null ? last.quote() : context.prevailingQuote();
         e.addAttribute(new LAttribute(leading, name, "=", quote, context.escapeAttribute(value, quote)));
         return true;
     }

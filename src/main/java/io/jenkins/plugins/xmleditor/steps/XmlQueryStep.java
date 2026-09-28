@@ -193,6 +193,8 @@ public class XmlQueryStep extends AbstractXmlFileStep {
             return Set.of(TaskListener.class);
         }
 
+        // Fixed list of options, the same information is in the source code: no POST or permission check needed.
+        @SuppressWarnings({"lgtm[jenkins/csrf]", "lgtm[jenkins/no-permission-check]"})
         public ListBoxModel doFillReturnTypeItems() {
             ListBoxModel items = new ListBoxModel();
             for (ReturnType t : ReturnType.values()) {

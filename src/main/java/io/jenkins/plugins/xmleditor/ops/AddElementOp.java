@@ -51,6 +51,8 @@ public class AddElementOp extends XmlOperationDescribable {
             return "Add element";
         }
 
+        // Fixed list of options, the same information is in the source code: no POST or permission check needed.
+        @SuppressWarnings({"lgtm[jenkins/csrf]", "lgtm[jenkins/no-permission-check]"})
         public ListBoxModel doFillPositionItems() {
             return new ListBoxModel(
                     new ListBoxModel.Option("As last child", "LAST_CHILD"),
