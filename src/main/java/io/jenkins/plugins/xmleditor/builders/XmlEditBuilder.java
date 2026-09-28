@@ -149,6 +149,9 @@ public class XmlEditBuilder extends Builder implements SimpleBuildStep {
         if (maxSizeMb <= 0) {
             throw new AbortException("Edit XML file: the maximum size must be greater than 0");
         }
+        if ((file == null) == (files == null)) {
+            throw new AbortException("Edit XML file: specify exactly one of 'file' or 'files'");
+        }
         Map<String, String> prefixes;
         try {
             prefixes = NamespaceLines.parse(namespaces);
