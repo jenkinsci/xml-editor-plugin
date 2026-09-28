@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="style.xsl"?>
+<doc>
+  <script><![CDATA[
+    if (a < b && c > d) { alert("]]]]><![CDATA[>"); }
+  ]]></script>
+  <?php echo "hi"; ?>
+  <ns:item xmlns:ns="urn:example" ns:attr="v">x</ns:item>
+</doc>

@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<root   a = 'single'
+	b="double"	c='mixed "quotes"'
+        d="it's" >
+	<child/>
+	<child   />
+	<child x='1'   ></child   >
+
+	<empty></empty>
+	<text>  leading and trailing spaces  </text>
+	<entities>&lt;tag&gt; &#169; &#xA9; &amp;amp;</entities>
+<noindent>x</noindent>
+    <mixed>text <b>bold</b> more <i>italic</i> end</mixed>
+</root   >

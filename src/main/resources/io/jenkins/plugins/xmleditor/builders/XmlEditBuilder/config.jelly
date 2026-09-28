@@ -1,0 +1,35 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+  <f:entry title="File" field="file">
+    <f:textbox/>
+  </f:entry>
+  <f:entry title="Files (Ant pattern, instead of File)" field="files">
+    <f:textbox placeholder="**/*.csproj"/>
+  </f:entry>
+  <f:entry title="Excludes (Ant pattern)" field="excludes">
+    <f:textbox/>
+  </f:entry>
+  <f:entry title="Operations" field="operations">
+    <f:repeatableHeteroProperty field="operations" hasHeader="true" addCaption="Add operation"/>
+  </f:entry>
+  <f:entry field="showDiff">
+    <f:checkbox title="Show a diff of the changes in the build log" default="true"/>
+  </f:entry>
+  <f:entry field="dryRun">
+    <f:checkbox title="Dry run: show the changes without writing the files"/>
+  </f:entry>
+  <f:advanced>
+    <f:entry title="Output file (instead of editing in place)" field="outputFile">
+      <f:textbox/>
+    </f:entry>
+    <f:entry field="strictNamespaces">
+      <f:checkbox title="Strict namespaces"/>
+    </f:entry>
+    <f:entry title="Maximum file size (MB)" field="maxSizeMb">
+      <f:number default="50" min="1"/>
+    </f:entry>
+    <f:entry title="Namespace prefixes (one prefix=uri per line)" field="namespaces">
+      <f:textarea/>
+    </f:entry>
+  </f:advanced>
+</j:jelly>

@@ -1,0 +1,8 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <dependencies>
+        <!-- first -->
+        <dependency>
+            <artifactId>a</artifactId>
+        </dependency>
+    </dependencies>
+</project>

@@ -1,0 +1,5 @@
+<?jelly escape-by-default='true'?>
+<div>
+  Query, read, edit and validate XML files from Pipeline and Freestyle jobs.
+  Edits are lossless: formatting, comments and everything you did not change stay byte-for-byte identical.
+</div>

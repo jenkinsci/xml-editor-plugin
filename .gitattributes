@@ -1,0 +1,9 @@
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.jar binary
+*.png binary
+*.hpi binary
+
+# Test XML files must keep their exact bytes (CRLF, BOM, encodings)
+src/test/resources/** -text

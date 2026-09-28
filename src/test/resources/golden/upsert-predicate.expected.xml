@@ -1,0 +1,6 @@
+<Project>
+  <ItemGroup/>
+  <ItemGroup Label="Deps">
+    <X>1</X>
+  </ItemGroup>
+</Project>
