@@ -100,7 +100,7 @@ public final class EditContext {
     }
 
     /** The quote used by most attributes of the document ({@code "} when there are none or on a tie). */
-    public char dominantQuote() {
+    public char prevailingQuote() {
         int[] counts = new int[2];
         countQuotes(doc.root(), counts);
         return counts[1] > counts[0] ? '\'' : '"';
