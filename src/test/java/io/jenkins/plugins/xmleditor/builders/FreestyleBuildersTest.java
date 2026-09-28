@@ -118,6 +118,22 @@ class FreestyleBuildersTest {
     }
 
     @Test
+    void editBuilderNeedsExactlyOneOfFileOrFiles() throws Exception {
+        FreeStyleProject p = projectWriting("pom.xml", POM);
+        XmlEditBuilder edit = new XmlEditBuilder("", List.of(new RemoveOp("/project/version")));
+        p.getBuildersList().add(edit);
+        FreeStyleBuild none = j.buildAndAssertStatus(Result.FAILURE, p);
+        j.assertLogContains("Edit XML file: specify exactly one of 'file' or 'files'", none);
+        j.assertLogNotContains("'text'", none);
+
+        XmlEditBuilder both = new XmlEditBuilder("pom.xml", List.of(new RemoveOp("/project/version")));
+        both.setFiles("**/*.xml");
+        p.getBuildersList().replace(edit, both);
+        j.assertLogContains(
+                "Edit XML file: specify exactly one of 'file' or 'files'", j.buildAndAssertStatus(Result.FAILURE, p));
+    }
+
+    @Test
     void configurationRoundTrip() throws Exception {
         FreeStyleProject p = j.createFreeStyleProject();
         SetTextOp setText = new SetTextOp("/project/version", "2.0");
