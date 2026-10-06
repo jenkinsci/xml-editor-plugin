@@ -98,9 +98,9 @@ if (!r.valid) { r.errors.each { echo "${it.line}:${it.column} ${it.message}" } }
 | Parameter | Description |
 |---|---|
 | `file` | Path relative to the current directory (`dir {}` is honoured); it cannot leave the workspace |
-| `text` | XML text instead of `file` (all steps; `xmlEdit` returns the edited text as `text`) |
-| `namespaces` | Extra prefixes for XPath, e.g. `[m: 'urn:x']`. Prefixes declared in the document work without it |
-| `strictNamespaces` | `true` for standard XPath 1.0 namespace rules (default namespace not transparent) |
+| `text` | XML text instead of `file` (all steps; `xmlEdit` returns the edited text as `text`). Set exactly one of them: the Snippet Generator flags conflicting fields |
+| `namespaces` | Extra prefixes for XPath, e.g. `[m: 'urn:x']`. Prefixes declared in the document work without it (`xmlQuery`, `xmlRead`, `xmlEdit`) |
+| `strictNamespaces` | `true` for standard XPath 1.0 namespace rules (default namespace not transparent) (`xmlQuery`, `xmlRead`, `xmlEdit`) |
 | `maxSizeMb` | Refuse larger files (default `50`) |
 
 ### `xmlQuery`

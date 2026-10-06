@@ -5,18 +5,25 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.Util;
+import hudson.model.Item;
 import hudson.model.TaskListener;
+import hudson.util.FormValidation;
 import io.jenkins.plugins.xmleditor.core.validate.ValidationResult;
+import io.jenkins.plugins.xmleditor.ops.SourceFormValidation;
 import java.util.Set;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 
 /** {@code xmlValidate}: checks well-formedness and, optionally, conformance to an XSD. */
-public class XmlValidateStep extends AbstractXmlFileStep {
+public class XmlValidateStep extends AbstractXmlStep {
 
     private String schema;
     private boolean failOnError = true;
@@ -31,7 +38,7 @@ public class XmlValidateStep extends AbstractXmlFileStep {
 
     @DataBoundSetter
     public void setSchema(String schema) {
-        this.schema = schema == null || schema.isBlank() ? null : schema;
+        this.schema = Util.fixEmptyAndTrim(schema);
     }
 
     public boolean isFailOnError() {
@@ -97,6 +104,18 @@ public class XmlValidateStep extends AbstractXmlFileStep {
         @Override
         public String getDisplayName() {
             return "Validate an XML file (well-formedness, XSD)";
+        }
+
+        @POST
+        public FormValidation doCheckFile(
+                @AncestorInPath Item item, @QueryParameter String value, @QueryParameter String text) {
+            return SourceFormValidation.onlyOne(item, FILE_OR_TEXT, value, text);
+        }
+
+        @POST
+        public FormValidation doCheckText(
+                @AncestorInPath Item item, @QueryParameter String value, @QueryParameter String file) {
+            return SourceFormValidation.onlyOne(item, FILE_OR_TEXT, value, file);
         }
 
         @Override

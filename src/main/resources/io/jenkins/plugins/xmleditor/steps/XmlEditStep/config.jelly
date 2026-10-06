@@ -1,10 +1,10 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
   <f:entry title="File" field="file">
-    <f:textbox/>
+    <f:textbox checkMethod="post"/>
   </f:entry>
   <f:entry title="Files (Ant pattern, instead of File)" field="files">
-    <f:textbox placeholder="**/*.csproj"/>
+    <f:textbox placeholder="**/*.csproj" checkMethod="post"/>
   </f:entry>
   <f:entry title="Excludes (Ant pattern)" field="excludes">
     <f:textbox/>
@@ -20,7 +20,7 @@
   </f:entry>
   <f:advanced>
     <f:entry title="Text (instead of files)" field="text">
-      <f:textarea/>
+      <f:textarea checkMethod="post"/>
     </f:entry>
     <f:entry title="Output file (instead of editing in place)" field="outputFile">
       <f:textbox/>
