@@ -1,14 +1,14 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
   <f:entry title="File" field="file">
-    <f:textbox/>
+    <f:textbox checkMethod="post"/>
   </f:entry>
   <f:entry title="XPath of the element to read (optional)" field="xpath">
     <f:textbox checkMethod="post"/>
   </f:entry>
   <f:advanced>
     <f:entry title="Text (instead of file)" field="text">
-      <f:textarea/>
+      <f:textarea checkMethod="post"/>
     </f:entry>
     <f:entry field="strictNamespaces">
       <f:checkbox title="Strict namespaces"/>

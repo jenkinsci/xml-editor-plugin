@@ -3,6 +3,7 @@ package io.jenkins.plugins.xmleditor.steps;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.Util;
 import hudson.model.Item;
 import hudson.model.TaskListener;
 import hudson.util.FormValidation;
@@ -13,6 +14,7 @@ import io.jenkins.plugins.xmleditor.core.model.LItem;
 import io.jenkins.plugins.xmleditor.core.read.XmlToMapConverter;
 import io.jenkins.plugins.xmleditor.core.xpath.XPathEngine;
 import io.jenkins.plugins.xmleditor.core.xpath.XPathOptions;
+import io.jenkins.plugins.xmleditor.ops.SourceFormValidation;
 import io.jenkins.plugins.xmleditor.ops.XPathFormValidation;
 import java.util.List;
 import java.util.Set;
@@ -27,7 +29,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.verb.POST;
 
 /** {@code xmlRead}: converts the document (or the element selected by {@code xpath}) to maps and lists. */
-public class XmlReadStep extends AbstractXmlFileStep {
+public class XmlReadStep extends AbstractXPathStep {
 
     private String xpath;
 
@@ -41,7 +43,7 @@ public class XmlReadStep extends AbstractXmlFileStep {
 
     @DataBoundSetter
     public void setXpath(String xpath) {
-        this.xpath = xpath == null || xpath.isBlank() ? null : xpath;
+        this.xpath = Util.fixEmptyAndTrim(xpath);
     }
 
     @Override
@@ -63,7 +65,7 @@ public class XmlReadStep extends AbstractXmlFileStep {
         @Override
         protected Object run() throws Exception {
             String source = step.getFile() != null ? step.getFile() : "text";
-            return step.runTask(getContext(), new ReadTask(step.xpath, step.xpathOptions(), source));
+            return XmlTasks.run(getContext(), step, new ReadTask(step.xpath, step.xpathOptions(), source));
         }
     }
 
@@ -115,6 +117,18 @@ public class XmlReadStep extends AbstractXmlFileStep {
         @POST
         public FormValidation doCheckXpath(@AncestorInPath Item item, @QueryParameter String value) {
             return XPathFormValidation.check(item, value, false);
+        }
+
+        @POST
+        public FormValidation doCheckFile(
+                @AncestorInPath Item item, @QueryParameter String value, @QueryParameter String text) {
+            return SourceFormValidation.onlyOne(item, FILE_OR_TEXT, value, text);
+        }
+
+        @POST
+        public FormValidation doCheckText(
+                @AncestorInPath Item item, @QueryParameter String value, @QueryParameter String file) {
+            return SourceFormValidation.onlyOne(item, FILE_OR_TEXT, value, file);
         }
 
         @Override

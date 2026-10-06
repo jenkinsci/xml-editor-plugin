@@ -2,6 +2,7 @@ package io.jenkins.plugins.xmleditor.ops;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.Util;
 import hudson.util.ListBoxModel;
 import io.jenkins.plugins.xmleditor.core.edit.AddElement;
 import io.jenkins.plugins.xmleditor.core.edit.XmlOperation;
@@ -34,7 +35,8 @@ public class AddElementOp extends XmlOperationDescribable {
 
     @DataBoundSetter
     public void setPosition(String position) {
-        this.position = position == null || position.isBlank() ? DEFAULT_POSITION : position.trim();
+        String trimmed = Util.fixEmptyAndTrim(position);
+        this.position = trimmed == null ? DEFAULT_POSITION : trimmed;
     }
 
     @Override

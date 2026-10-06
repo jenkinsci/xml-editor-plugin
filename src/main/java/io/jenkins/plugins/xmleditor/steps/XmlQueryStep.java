@@ -12,6 +12,7 @@ import io.jenkins.plugins.xmleditor.core.XmlEditorException;
 import io.jenkins.plugins.xmleditor.core.model.LDocument;
 import io.jenkins.plugins.xmleditor.core.xpath.XPathEngine;
 import io.jenkins.plugins.xmleditor.core.xpath.XPathOptions;
+import io.jenkins.plugins.xmleditor.ops.SourceFormValidation;
 import io.jenkins.plugins.xmleditor.ops.XPathFormValidation;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.verb.POST;
 
 /** {@code xmlQuery}: evaluates an XPath expression and returns its value. */
-public class XmlQueryStep extends AbstractXmlFileStep {
+public class XmlQueryStep extends AbstractXPathStep {
 
     enum ReturnType {
         STRING,
@@ -112,8 +113,9 @@ public class XmlQueryStep extends AbstractXmlFileStep {
                 throw new AbortException("xpath must not be empty");
             }
             String source = step.getFile() != null ? step.getFile() : "text";
-            return step.runTask(
+            return XmlTasks.run(
                     getContext(),
+                    step,
                     new QueryTask(
                             step.xpath, type, step.failIfNotFound, step.defaultValue, step.xpathOptions(), source));
         }
@@ -186,6 +188,18 @@ public class XmlQueryStep extends AbstractXmlFileStep {
         @POST
         public FormValidation doCheckXpath(@AncestorInPath Item item, @QueryParameter String value) {
             return XPathFormValidation.check(item, value, true);
+        }
+
+        @POST
+        public FormValidation doCheckFile(
+                @AncestorInPath Item item, @QueryParameter String value, @QueryParameter String text) {
+            return SourceFormValidation.onlyOne(item, FILE_OR_TEXT, value, text);
+        }
+
+        @POST
+        public FormValidation doCheckText(
+                @AncestorInPath Item item, @QueryParameter String value, @QueryParameter String file) {
+            return SourceFormValidation.onlyOne(item, FILE_OR_TEXT, value, file);
         }
 
         @Override

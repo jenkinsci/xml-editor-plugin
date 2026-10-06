@@ -7,14 +7,18 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.AbstractProject;
+import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import hudson.util.FormValidation;
 import io.jenkins.plugins.xmleditor.core.XmlEditorException;
 import io.jenkins.plugins.xmleditor.core.edit.XmlOperation;
 import io.jenkins.plugins.xmleditor.core.xpath.XPathOptions;
+import io.jenkins.plugins.xmleditor.ops.SourceFormValidation;
 import io.jenkins.plugins.xmleditor.ops.XmlOperationDescribable;
 import io.jenkins.plugins.xmleditor.steps.EditRequest;
 import io.jenkins.plugins.xmleditor.steps.EditSummary;
@@ -26,13 +30,18 @@ import java.util.List;
 import java.util.Map;
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 
 /** Freestyle build step "Edit XML file": same operations as {@code xmlEdit}, with {@code $VARIABLE} expansion. */
 public class XmlEditBuilder extends Builder implements SimpleBuildStep {
 
     static final int DEFAULT_MAX_SIZE_MB = 50;
+
+    private static final String FILE_OR_FILES = "'file' or 'files'";
 
     private final String file;
     private final List<XmlOperationDescribable> operations;
@@ -47,7 +56,7 @@ public class XmlEditBuilder extends Builder implements SimpleBuildStep {
 
     @DataBoundConstructor
     public XmlEditBuilder(String file, List<XmlOperationDescribable> operations) {
-        this.file = file == null || file.isBlank() ? null : file;
+        this.file = Util.fixEmptyAndTrim(file);
         this.operations = operations == null ? new ArrayList<>() : new ArrayList<>(operations);
     }
 
@@ -68,7 +77,7 @@ public class XmlEditBuilder extends Builder implements SimpleBuildStep {
 
     @DataBoundSetter
     public void setFiles(String files) {
-        this.files = files == null || files.isBlank() ? null : files;
+        this.files = Util.fixEmptyAndTrim(files);
     }
 
     @CheckForNull
@@ -78,7 +87,7 @@ public class XmlEditBuilder extends Builder implements SimpleBuildStep {
 
     @DataBoundSetter
     public void setExcludes(String excludes) {
-        this.excludes = excludes == null || excludes.isBlank() ? null : excludes;
+        this.excludes = Util.fixEmptyAndTrim(excludes);
     }
 
     public boolean isDryRun() {
@@ -97,7 +106,7 @@ public class XmlEditBuilder extends Builder implements SimpleBuildStep {
 
     @DataBoundSetter
     public void setOutputFile(String outputFile) {
-        this.outputFile = outputFile == null || outputFile.isBlank() ? null : outputFile;
+        this.outputFile = Util.fixEmptyAndTrim(outputFile);
     }
 
     public boolean isShowDiff() {
@@ -117,7 +126,7 @@ public class XmlEditBuilder extends Builder implements SimpleBuildStep {
 
     @DataBoundSetter
     public void setNamespaces(String namespaces) {
-        this.namespaces = namespaces == null || namespaces.isBlank() ? null : namespaces;
+        this.namespaces = Util.fixEmptyAndTrim(namespaces);
     }
 
     public boolean isStrictNamespaces() {
@@ -194,6 +203,18 @@ public class XmlEditBuilder extends Builder implements SimpleBuildStep {
         @Override
         public String getDisplayName() {
             return "Edit XML file";
+        }
+
+        @POST
+        public FormValidation doCheckFile(
+                @AncestorInPath Item item, @QueryParameter String value, @QueryParameter String files) {
+            return SourceFormValidation.onlyOne(item, FILE_OR_FILES, value, files);
+        }
+
+        @POST
+        public FormValidation doCheckFiles(
+                @AncestorInPath Item item, @QueryParameter String value, @QueryParameter String file) {
+            return SourceFormValidation.onlyOne(item, FILE_OR_FILES, value, file);
         }
     }
 }

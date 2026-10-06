@@ -7,6 +7,7 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.AbstractProject;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -29,9 +30,10 @@ public class XmlValidateBuilder extends Builder implements SimpleBuildStep {
 
     @DataBoundConstructor
     public XmlValidateBuilder(String file) {
-        this.file = file;
+        this.file = Util.fixEmptyAndTrim(file);
     }
 
+    @CheckForNull
     public String getFile() {
         return file;
     }
@@ -43,7 +45,7 @@ public class XmlValidateBuilder extends Builder implements SimpleBuildStep {
 
     @DataBoundSetter
     public void setSchema(String schema) {
-        this.schema = schema == null || schema.isBlank() ? null : schema;
+        this.schema = Util.fixEmptyAndTrim(schema);
     }
 
     public int getMaxSizeMb() {
@@ -63,7 +65,7 @@ public class XmlValidateBuilder extends Builder implements SimpleBuildStep {
             @NonNull Launcher launcher,
             @NonNull TaskListener listener)
             throws InterruptedException, IOException {
-        if (file == null || file.isBlank()) {
+        if (file == null) {
             throw new AbortException("Validate XML file: the file is not configured");
         }
         if (maxSizeMb <= 0) {

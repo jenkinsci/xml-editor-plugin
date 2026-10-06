@@ -1,6 +1,5 @@
 package io.jenkins.plugins.xmleditor.steps;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.AbortException;
 import hudson.FilePath;
 import hudson.model.TaskListener;
@@ -8,43 +7,23 @@ import io.jenkins.plugins.xmleditor.core.XmlEditorException;
 import io.jenkins.plugins.xmleditor.core.parse.XmlDocuments;
 import java.io.Serializable;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
-import org.kohsuke.stapler.DataBoundSetter;
 
-/** Steps that read an XML document from a workspace file or from text. */
-public abstract class AbstractXmlFileStep extends AbstractXmlStep {
+/** Runs a read-only {@link XmlTask} ({@code xmlQuery}, {@code xmlRead}) on the document selected by a step. */
+final class XmlTasks {
 
-    private String file;
-    private String text;
-
-    @CheckForNull
-    public String getFile() {
-        return file;
-    }
-
-    @DataBoundSetter
-    public void setFile(String file) {
-        this.file = file == null || file.isEmpty() ? null : file;
-    }
-
-    @CheckForNull
-    public String getText() {
-        return text;
-    }
-
-    @DataBoundSetter
-    public void setText(String text) {
-        this.text = text == null || text.isEmpty() ? null : text;
-    }
+    private XmlTasks() {}
 
     /**
      * Runs {@code task} on the document: on the agent holding {@code file}, or on the controller for {@code text}.
      * Messages of the task are printed to the build log.
      */
-    Serializable runTask(StepContext context, XmlTask task) throws Exception {
+    static Serializable run(StepContext context, AbstractXmlStep step, XmlTask task) throws Exception {
+        String file = step.getFile();
+        String text = step.getText();
         if ((file == null) == (text == null)) {
             throw new AbortException("Specify exactly one of 'file' or 'text'");
         }
-        long maxBytes = maxBytes();
+        long maxBytes = step.maxBytes();
         XmlTaskResult result;
         if (text != null) {
             try {

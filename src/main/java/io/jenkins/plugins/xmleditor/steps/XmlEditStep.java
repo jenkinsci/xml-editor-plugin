@@ -5,7 +5,10 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.Util;
+import hudson.model.Item;
 import hudson.model.TaskListener;
+import hudson.util.FormValidation;
 import io.jenkins.plugins.xmleditor.core.XmlEditorException;
 import io.jenkins.plugins.xmleditor.core.diff.LineDiff;
 import io.jenkins.plugins.xmleditor.core.edit.EditResult;
@@ -13,6 +16,7 @@ import io.jenkins.plugins.xmleditor.core.edit.XmlEditor;
 import io.jenkins.plugins.xmleditor.core.edit.XmlOperation;
 import io.jenkins.plugins.xmleditor.core.model.LDocument;
 import io.jenkins.plugins.xmleditor.core.parse.XmlDocuments;
+import io.jenkins.plugins.xmleditor.ops.SourceFormValidation;
 import io.jenkins.plugins.xmleditor.ops.XmlOperationDescribable;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -24,20 +28,23 @@ import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 
 /**
  * {@code xmlEdit}: applies a list of operations to a workspace file, to all files matching a pattern, or to XML text,
  * preserving everything that is not changed.
  */
-public class XmlEditStep extends AbstractXmlStep {
+public class XmlEditStep extends AbstractXPathStep {
+
+    private static final String FILE_FILES_OR_TEXT = "'file', 'files' or 'text'";
 
     private final List<XmlOperationDescribable> operations;
-    private String file;
     private String files;
     private String excludes;
-    private String text;
     private String outputFile;
     private boolean showDiff = true;
     private boolean dryRun;
@@ -51,16 +58,6 @@ public class XmlEditStep extends AbstractXmlStep {
         return operations;
     }
 
-    @CheckForNull
-    public String getFile() {
-        return file;
-    }
-
-    @DataBoundSetter
-    public void setFile(String file) {
-        this.file = blankToNull(file);
-    }
-
     /** Ant pattern(s), comma separated, e.g. {@code **}{@code /*.csproj}. */
     @CheckForNull
     public String getFiles() {
@@ -69,7 +66,7 @@ public class XmlEditStep extends AbstractXmlStep {
 
     @DataBoundSetter
     public void setFiles(String files) {
-        this.files = blankToNull(files);
+        this.files = Util.fixEmptyAndTrim(files);
     }
 
     @CheckForNull
@@ -79,17 +76,7 @@ public class XmlEditStep extends AbstractXmlStep {
 
     @DataBoundSetter
     public void setExcludes(String excludes) {
-        this.excludes = blankToNull(excludes);
-    }
-
-    @CheckForNull
-    public String getText() {
-        return text;
-    }
-
-    @DataBoundSetter
-    public void setText(String text) {
-        this.text = text == null || text.isEmpty() ? null : text;
+        this.excludes = Util.fixEmptyAndTrim(excludes);
     }
 
     @CheckForNull
@@ -99,7 +86,7 @@ public class XmlEditStep extends AbstractXmlStep {
 
     @DataBoundSetter
     public void setOutputFile(String outputFile) {
-        this.outputFile = blankToNull(outputFile);
+        this.outputFile = Util.fixEmptyAndTrim(outputFile);
     }
 
     public boolean isShowDiff() {
@@ -118,10 +105,6 @@ public class XmlEditStep extends AbstractXmlStep {
     @DataBoundSetter
     public void setDryRun(boolean dryRun) {
         this.dryRun = dryRun;
-    }
-
-    private static String blankToNull(String s) {
-        return s == null || s.isBlank() ? null : s;
     }
 
     @Override
@@ -147,11 +130,12 @@ public class XmlEditStep extends AbstractXmlStep {
                 ops.add(op.toCore(UnaryOperator.identity()));
             }
             PrintStream logger = getContext().get(TaskListener.class).getLogger();
-            if (step.text != null) {
-                return editText(ops, logger);
+            String text = step.getText();
+            if (text != null) {
+                return editText(text, ops, logger);
             }
             EditRequest request = new EditRequest(
-                    step.file,
+                    step.getFile(),
                     step.files,
                     step.excludes,
                     step.outputFile,
@@ -175,8 +159,8 @@ public class XmlEditStep extends AbstractXmlStep {
             return summaries.get(0).toPipelineValue();
         }
 
-        private Object editText(List<XmlOperation> ops, PrintStream logger) throws Exception {
-            if (step.file != null || step.files != null) {
+        private Object editText(String text, List<XmlOperation> ops, PrintStream logger) throws Exception {
+            if (step.getFile() != null || step.files != null) {
                 throw new AbortException("Specify exactly one of 'file', 'files' or 'text'");
             }
             if (step.dryRun || step.outputFile != null || step.excludes != null) {
@@ -186,7 +170,7 @@ public class XmlEditStep extends AbstractXmlStep {
                 throw new AbortException("xmlEdit needs at least one operation");
             }
             try {
-                LDocument doc = XmlDocuments.parseText(step.text, "text", step.maxBytes());
+                LDocument doc = XmlDocuments.parseText(text, "text", step.maxBytes());
                 EditResult result = XmlEditor.apply(doc, ops, step.xpathOptions());
                 String diff = step.showDiff
                         ? LineDiff.unified(
@@ -221,6 +205,33 @@ public class XmlEditStep extends AbstractXmlStep {
         @Override
         public String getDisplayName() {
             return "Edit XML files (lossless)";
+        }
+
+        @POST
+        public FormValidation doCheckFile(
+                @AncestorInPath Item item,
+                @QueryParameter String value,
+                @QueryParameter String files,
+                @QueryParameter String text) {
+            return SourceFormValidation.onlyOne(item, FILE_FILES_OR_TEXT, value, files, text);
+        }
+
+        @POST
+        public FormValidation doCheckFiles(
+                @AncestorInPath Item item,
+                @QueryParameter String value,
+                @QueryParameter String file,
+                @QueryParameter String text) {
+            return SourceFormValidation.onlyOne(item, FILE_FILES_OR_TEXT, value, file, text);
+        }
+
+        @POST
+        public FormValidation doCheckText(
+                @AncestorInPath Item item,
+                @QueryParameter String value,
+                @QueryParameter String file,
+                @QueryParameter String files) {
+            return SourceFormValidation.onlyOne(item, FILE_FILES_OR_TEXT, value, file, files);
         }
 
         @Override

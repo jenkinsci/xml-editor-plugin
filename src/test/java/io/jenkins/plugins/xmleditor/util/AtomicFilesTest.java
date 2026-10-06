@@ -6,7 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Set;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -39,6 +44,38 @@ class AtomicFilesTest {
         AtomicFiles.write(link, "<new/>".getBytes(StandardCharsets.UTF_8));
         org.junit.jupiter.api.Assertions.assertTrue(Files.isSymbolicLink(link));
         assertEquals("<new/>", Files.readString(real));
+    }
+
+    @Test
+    void keepsThePermissionsOfTheReplacedFile() throws Exception {
+        assumePosix();
+        Path file = dir.resolve("run.sh");
+        Files.writeString(file, "old");
+        Set<PosixFilePermission> executable = PosixFilePermissions.fromString("rwxr-x---");
+        Files.setPosixFilePermissions(file, executable);
+        AtomicFiles.write(file, "new".getBytes(StandardCharsets.UTF_8));
+        assertEquals(executable, Files.getPosixFilePermissions(file));
+    }
+
+    @Test
+    void newFilesGetTheDefaultPermissionsNotOwnerOnly() throws Exception {
+        assumePosix();
+        Path reference = Files.createFile(dir.resolve("reference.xml"));
+        Path file = dir.resolve("new.xml");
+        AtomicFiles.write(file, "<new/>".getBytes(StandardCharsets.UTF_8));
+        assertEquals(Files.getPosixFilePermissions(reference), Files.getPosixFilePermissions(file));
+    }
+
+    private void assumePosix() {
+        Assumptions.assumeTrue(
+                Files.getFileAttributeView(dir, PosixFileAttributeView.class) != null, "POSIX permissions only");
+    }
+
+    @Test
+    void writesFilesWithOneCharacterNames() throws Exception {
+        Path file = dir.resolve("a");
+        AtomicFiles.write(file, "<a/>".getBytes(StandardCharsets.UTF_8));
+        assertEquals("<a/>", Files.readString(file));
     }
 
     @Test

@@ -1,6 +1,7 @@
 package io.jenkins.plugins.xmleditor.ops;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.model.Item;
@@ -37,7 +38,7 @@ public abstract class XmlOperationDescribable extends AbstractDescribableImpl<Xm
 
     @DataBoundSetter
     public void setExpected(String expected) {
-        this.expected = expected == null || expected.isBlank() ? null : expected.trim();
+        this.expected = Util.fixEmptyAndTrim(expected);
     }
 
     /**
